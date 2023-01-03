@@ -613,424 +613,121 @@ Quindi la struttura è implicita:
 
 
 
-\section{Struttura per parentesi ben formate}
-\subsection{Linguaggi di Dyck}
-Un linguaggio di Dyck $L$ è un linguaggio sull'alfabeto $D=\{(,)\}$ tale che $L \subseteq D^*$
-e una stringa $w \in D^*$ appartiene a $L$ se e solo se
-\begin{enumerate}
-	\item $|w|_{(} = |w|_{)}$; e
-	\item $\forall w_1, w_2 \text{ tali che } w = w_1w_2 \implies|w_1|_{(} \geq |w_2|_{)}$
-\end{enumerate}
-Un modo interessante per studiare una parola $w$ di Dyck è studiarne la
-\textit{funzione di eccesso}, definita
-$$
-	E_w(i) = |\{j | j \le i ~ w_j = ( ~\}| - |\{j | j \leq i ~ w_j = ) ~\}|
-$$
-\begin{figure}[h]
-	\centering
-	\begin{tikzpicture}
-		\draw[->] (-1, 0) -- (8.50, 0) node[right] {$x$};
-		\draw[->] (-1, 0) -- (-1, 4) node[above] {$y$};
+\section{Parentesi ben bilanciate}
+L'insieme $D_k$, con $k\in\N$, contiene le parole di Dyck di semilunghezza $k$, cioè composte da $2k$ parentesi ben bilanciate (di cui $k$ aperte e $k$ chiuse). Gli insiemi $D_k$ sono definiti induttivamente:
+\begin{itemize}
+	\item $\varepsilon\in D_0$
+	\item $x\in D_n,y\in D_m\Rightarrow xy\in D_{n+m}$
+	\item $x\in D_n\Rightarrow (x)\in D_{n+1}$
+\end{itemize}
+Equivalentemente
+\begin{itemize}
+	\item $\varepsilon\in D_0$
+	\item $x\in D_n,y\in D_m\Rightarrow (x)y\in D_{n+m+1}$
+\end{itemize}
 
-		\draw (0,0) node[circle,fill,inner sep=1pt, label=above:{(}] {} -- (1,1) node[circle,fill,inner sep=1pt]{};
-		\draw (1,1) node[circle,fill,inner sep=1pt, label=above:{(}] {} -- (2,1) node[circle,fill,inner sep=1pt]{};
-		\draw (2,1) node[circle,fill,inner sep=1pt, label=above:{)}] {} -- (3,1) node[circle,fill,inner sep=1pt]{};
-		\draw (3,1) node[circle,fill,inner sep=1pt, label=above:{(}] {} -- (4,2) node[circle,fill,inner sep=1pt]{};
-		\draw (4,2) node[circle,fill,inner sep=1pt, label=above:{(}] {} -- (5,2) node[circle,fill,inner sep=1pt]{};
-		\draw (5,2) node[circle,fill,inner sep=1pt, label=above:{)}] {} -- (6,1) node[circle,fill,inner sep=1pt]{};
-		\draw (6,1) node[circle,fill,inner sep=1pt, label=above:{)}] {} -- (7,0) node[circle,fill,inner sep=1pt, label=above:{)}]{};
-	\end{tikzpicture}
+Per ogni parola di Dyck viene definita la funzione di eccesso, che rappresenta la profondità, in numero di parentesi innestate, di ogni posizione. Per $i\in\set{0,\dots,\len w}$:
+\begin{equation*}
+	E_w(i) = \card{\set{j < i \mid w_j = (~ }} - \card{\set{j\leq i \mid w_j = ) }}
+\end{equation*}
+
+\begin{figure}[ht]
+	\centering
+	\input{img/dyck_eccesso.tikz}
 	\caption{Funzione di eccesso per la parola $(()(()))$.}
 	\label{fig:func_excess}
 \end{figure}
 
-Questa funzione parte da $0$, può tornare a $0$ e, se la parola è effettivamente nel
-linguaggio, termina a $0$. Ci sono due tipi di stringhe di Dyck: quelle per cui
-la funzione non raggiunge nessuno $0$ tranne quello iniziale e quello finale,
-chiamate \textit{fortemente bilanciate}, e quelle per cui questa funzione raggiunge
-uno $0$ diverso da quello iniziale e quello finale, quindi $w = w_1w_2$ è
-\textit{debolmente bilanciata} e tale per cui almeno uno tra $w_1$ e $w_2$ è
-fortemente bilanciata.
+% TODO: informazione fine a se stessa, spostare?
+Le parole di Dyck si classificano sulla base della loro funzione di eccesso in due categorie:
+\begin{description}
+	\item[fortemente bilanciate] la funzione non ha zeri se non per il primo e l'ultimo simbolo;
+	\item[debolmente bilanciate] la funzione assume uno zero in una posizione $i\neq0$. Il prefisso di lunghezza $i+1$ della parola è fortemente bilanciato.
+\end{description}
 
-Ci sono molti motivi per cui le sequenze di parentesi sono interessanti. In particolare,
-le espressioni ben parentesizzate sono in biiezione sia con le foreste di alberi binari che con gli
-alberi non binari. In qualche modo, esattamente come abbiamo visto una rappresentazione
-per gli alberi binari in precedenza, ora stiamo analizzando una struttura per alberi
-generali. Le sequenze di parentesi aperte e chiuse le penseremo come stringhe di bit, cioè
-una stringa
-$$
-	(()(()())(()))
-$$
-è rappresentata come una stringa
-$$
-	11011010011000
-$$
-la cui funzione di eccesso è rappresentata in \cref{fig:func_excess_example}.
+L'ADT che vogliamo descrivere per le stringhe di parentesi ben bilanciate si compone delle seguenti primitive, che hanno come input una posizione $p$:
+\begin{description}
+	\renewcommand{\dyfindopen}{\mathbf{find\_open}}
+	\renewcommand{\dyfindclose}{\mathbf{find\_close}}
+	\renewcommand{\dyenclose}{\mathbf{enclose}}
+	\item[$\dyfindopen$] restituisce la posizione della parentesi aperta corrispondente alla chiusa in posizione $p$;
+	\item[$\dyfindclose$] restituisce la posizione della parentesi chiusa corrispondente all'aperta in posizione $p$;.
+	\item[$\dyenclose$] restituisce la posizione della parentesi aperta corrispondente alla chiusa in posizione $p$.
+\end{description}
 
-\begin{figure}[h]
+
+\subsection{Una struttura compatta per parentesi ben bilanciate}
+Una struttura compatta a tempo logaritmico per le parentesi bilanciate prevede di dividere la parola, di lunghezza $n$, in blocchi di lunghezza $l$, ottenendo $k=\ceil{n/l}$ blocchi.
+Classifichiamo poi i simboli della parola in due gruppi:
+\begin{description}
+	\item[vicine] parentesi la cui corrispettiva appartiene allo stesso blocco;
+	\item[lontane] parentesi rimanenti, divise ulteriormente in
+		\begin{description}
+			\item[pioniere] parentesi aperte;
+			\item[non-pioniere] la prima tra le lontane che si chiudono in uno stesso blocco, per ogni blocco.
+		\end{description}
+\end{description}
+Ad esempio in \cref{fig:paren_blocks} le parentesi gialle sono vicine, quelle rosse sono pioniere e quelle blu sono non-pioniere.
+
+\begin{figure}[ht]
 	\centering
-	\begin{tikzpicture}
-		\draw[->] (-1, 0) -- (14.5, 0) node[right] {$x$};
-		\draw[->] (-1, 0) -- (-1, 4) node[above] {$y$};
-
-		\draw (0,0) node[label=above:{(}]	{} -- 	(1,1) node[circle,fill,inner sep=1pt]{};
-		\draw (1,1) node[label=above:{(}] 	{} -- 	(2,1) node[circle,fill,inner sep=1pt]{};
-		\draw (2,1) node[label=above:{)}] 	{} -- 	(3,1) node[circle,fill,inner sep=1pt]{};
-		\draw (3,1) node[label=above:{(}] 	{} -- 	(4,2) node[circle,fill,inner sep=1pt]{};
-		\draw (4,2) node[label=above:{(}] 	{} -- 	(5,2) node[circle,fill,inner sep=1pt]{};
-		\draw (5,2) node[label=above:{)}] 	{} -- 	(6,2) node[circle,fill,inner sep=1pt]{};
-		\draw (6,2) node[label=above:{(}] 	{} -- 	(7,2) node[circle,fill,inner sep=1pt]{};
-		\draw (7,2) node[label=above:{)}] 	{} -- 	(8,1) node[circle,fill,inner sep=1pt]{};
-		\draw (8,1) node[label=above:{)}] 	{} -- 	(9,1) node[circle,fill,inner sep=1pt]{};
-		\draw (9,1) node[label=above:{(}] 	{} -- 	(10,2) node[circle,fill,inner sep=1pt]{};
-		\draw (10,2) node[label=above:{(}]  	{} -- 	(11,2) node[circle,fill,inner sep=1pt]{};
-		\draw (11,2) node[label=above:{)}]  	{} -- 	(12,1) node[circle,fill,inner sep=1pt]{};
-		\draw (12,1) node[label=above:{)}]  	{} -- 	(13,0) node[circle,fill,inner sep=1pt,label=above:{)}]{};
-	\end{tikzpicture}
-	\caption{Funzione di eccesso per la parola $(()(()())(()))$.}
-	\label{fig:func_excess_example}
-\end{figure}
-
-\subsection{L'ADT stringa bilanciata}
-L'ADT che vogliamo descrivere per le stringhe di parentesi ben bilanciate ha le primitive
-$$
-	\forall p \in \mathbb{N} ~~ \mathbf{find\_open}(p) = \text{parentesi aperta corrispondente alla chiusa in posizione } p
-$$
-$$
-	\forall p \in \mathbb{N} ~~ \mathbf{find\_close}(p) = \text{parentesi chiusa corrispondente all'aperta in posizione } p
-$$
-$$
-	\forall p \in \mathbb{N} ~~ \mathbf{enclose}(p) = \text{prima parentesi aperta che racchiude la parentesi in posizione } p
-$$
-
-Pensando ad una soluzione banale, una $\mathbf{find\_open}$ in una qualche posizione si può
-calcolare innanzitutto realizzando che la parentesi aperta corrispondente ad una
-parentesi chiusa è sicuramente prima della chiusa stessa; basta quindi cercare all'indietro fermandosi
-alla prima parentesi aperta che ha la stessa funzione di eccesso. Analogamente si fa per $\mathbf{find\_close}$.
-La cosa più semplice, quindi, sarebbe calcolare anticipatamente la funzione di eccesso e usarla
-facendo ricerche lineari, utilizzando uno spazio $n \log_2(n)$.
-Faremo meglio creando una struttura compatta con tempo di interrogazione logaritmico.
-
-\subsubsection{Rappresentazione}
-La prima operazione sulle parentesi da eseguire nella costruzione della struttura è dividere, nuovamente,
-la parola in blocchi di lunghezza $l$, creando $k = \lceil n/l \rceil$ blocchi. In ogni blocco
-ci sono parentesi chiuse e aperte e, in alcuni casi, le parentesi hanno la loro corrispondente
-dentro il blocco stesso: in questa situazione, definiamo la parentesi \textit{vicina}, mentre
-tutte le altri sono definite \textit{lontane}; in generale, tutte le parentesi aperte lontane
-si chiuderanno in un qualche blocco successivo.
-
-In ogni blocco ci sono alcune parentesi vicine e varie parentesi lontane. Può succedere
-che una o più parentesi lontane si chiudano nello stesso blocco: definiamo \textit{pioniera}
-la lontana aperta (benché si possa fare lo stesso ragionamento, a specchio, per le chiuse)
-che è la prima del blocco al quale appartiene a chiudersi in un qualsiasi altro blocco successivo.
-Un esempio di queste divisioni è in \cref{fig:paren_blocks}, dove le parentesi gialle sono le vicine,
-quelle blu sono lontane e quelle rosse sono pioniere.
-
-\begin{figure}[h]
-
-	\centering
-
-	\tikzset{every picture/.style={line width=0.75pt}} %set default line width to 0.75pt        
-
-	\begin{tikzpicture}[x=0.75pt,y=0.75pt,yscale=-1,xscale=1]
-		%uncomment if require: \path (0,300); %set diagram left start at 0, and has height of 300
-
-		%Shape: Rectangle [id:dp12028039856705786] 
-		\draw  [fill={rgb, 255:red, 208; green, 2; blue, 27 }  ,fill opacity=1 ] (160,170) -- (170,170) -- (170,190) -- (160,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp6017350169887977] 
-		\draw  [fill={rgb, 255:red, 247; green, 240; blue, 148 }  ,fill opacity=1 ] (170,170) -- (180,170) -- (180,190) -- (170,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp1862637830525412] 
-		\draw  [fill={rgb, 255:red, 247; green, 240; blue, 148 }  ,fill opacity=1 ] (180,170) -- (190,170) -- (190,190) -- (180,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp7375538410378665] 
-		\draw  [fill={rgb, 255:red, 208; green, 2; blue, 27 }  ,fill opacity=1 ] (190,170) -- (200,170) -- (200,190) -- (190,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp42832713437851455] 
-		\draw  [fill={rgb, 255:red, 139; green, 181; blue, 229 }  ,fill opacity=1 ] (200,170) -- (210,170) -- (210,190) -- (200,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp3771120606312378] 
-		\draw  [fill={rgb, 255:red, 139; green, 181; blue, 229 }  ,fill opacity=1 ] (210,170) -- (220,170) -- (220,190) -- (210,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp19892421904849122] 
-		\draw  [fill={rgb, 255:red, 247; green, 240; blue, 148 }  ,fill opacity=1 ] (220,170) -- (230,170) -- (230,190) -- (220,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp0006276055923941648] 
-		\draw  [fill={rgb, 255:red, 247; green, 240; blue, 148 }  ,fill opacity=1 ] (230,170) -- (240,170) -- (240,190) -- (230,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp16538357452442487] 
-		\draw  [fill={rgb, 255:red, 139; green, 181; blue, 229 }  ,fill opacity=1 ] (240,170) -- (250,170) -- (250,190) -- (240,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp06112380309966958] 
-		\draw  [fill={rgb, 255:red, 208; green, 2; blue, 27 }  ,fill opacity=1 ] (250,170) -- (260,170) -- (260,190) -- (250,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp06951356935410424] 
-		\draw  [fill={rgb, 255:red, 247; green, 240; blue, 148 }  ,fill opacity=1 ] (260,170) -- (270,170) -- (270,190) -- (260,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp885838800749071] 
-		\draw  [fill={rgb, 255:red, 247; green, 240; blue, 148 }  ,fill opacity=1 ] (270,170) -- (280,170) -- (280,190) -- (270,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp37752499309076915] 
-		\draw  [fill={rgb, 255:red, 139; green, 181; blue, 229 }  ,fill opacity=1 ] (280,170) -- (290,170) -- (290,190) -- (280,190) -- cycle ;
-
-		%Shape: Rectangle [id:dp7109616333523956] 
-		\draw  [fill={rgb, 255:red, 139; green, 181; blue, 229 }  ,fill opacity=1 ] (290,170) -- (300,170) -- (300,190) -- (290,190) -- cycle ;
-
-		%Straight Lines [id:da856450147041028] 
-		\draw    (210,160) -- (210,200) ;
-		%Straight Lines [id:da0823905364290688] 
-		\draw    (260,160) -- (260,200) ;
-		%Straight Lines [id:da8657156752341498] 
-		\draw    (205.14,190.29) -- (205.14,204.36) -- (216.43,204.36) -- (216.43,192.93) ;
-		\draw [shift={(216.43,189.93)}, rotate = 90] [fill={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.08]  [draw opacity=0] (8.93,-4.29) -- (0,0) -- (8.93,4.29) -- cycle    ;
-		%Straight Lines [id:da4613663625082196] 
-		\draw    (195.57,189.79) -- (195.57,212.07) -- (244.57,212.07) -- (244.57,193.64) ;
-		\draw [shift={(244.57,190.64)}, rotate = 90] [fill={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.08]  [draw opacity=0] (8.93,-4.29) -- (0,0) -- (8.93,4.29) -- cycle    ;
-		%Straight Lines [id:da9063548393327128] 
-		\draw    (165.43,190.21) -- (165.43,217.64) -- (284.43,217.64) -- (284.3,194.5) ;
-		\draw [shift={(284.29,191.5)}, rotate = 89.69] [fill={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.08]  [draw opacity=0] (8.93,-4.29) -- (0,0) -- (8.93,4.29) -- cycle    ;
-		%Straight Lines [id:da09579212789908009] 
-		\draw    (255.29,170.21) -- (255.29,152.07) -- (296.14,152.07) -- (296.14,166.21) ;
-		\draw [shift={(296.14,169.21)}, rotate = 270] [fill={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.08]  [draw opacity=0] (8.93,-4.29) -- (0,0) -- (8.93,4.29) -- cycle    ;
-
-		% Text Node
-		\draw (161,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {(};
-		% Text Node
-		\draw (171,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {(};
-		% Text Node
-		\draw (181,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {)};
-		% Text Node
-		\draw (211,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {)};
-		% Text Node
-		\draw (201,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {(};
-		% Text Node
-		\draw (191,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {(};
-		% Text Node
-		\draw (271,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {)};
-		% Text Node
-		\draw (261,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {(};
-		% Text Node
-		\draw (251,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {(};
-		% Text Node
-		\draw (241,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {)};
-		% Text Node
-		\draw (231,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {)};
-		% Text Node
-		\draw (221,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {(};
-		% Text Node
-		\draw (291,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {)};
-		% Text Node
-		\draw (281,172) node [anchor=north west][inner sep=0.75pt]   [align=left] {)};
-	\end{tikzpicture}
-
+	\input{img/dyck_classi_parentesi.tikz}
 	\caption{Divisione in blocchi di una stringa parentesizzata.}
 	\label{fig:paren_blocks}
 \end{figure}
 
-Assumiamo che $w$ sia la parola da rappresentare e assumiamo che $|w| = n$.
-Per rappresentare la parola memorizziamo, oltre a $w$ stessa, un vettore $\mathbf{p}$ di $n$ bit
-con $1$ nelle posizioni delle pioniere; il vettore $\mathbf{E}$, che per ogni blocco $i$
-da l'eccesso all'inizio del blocco e ha un elemento per ogni blocco; il vettore $\mathbf{M}$, che per ogni
-blocco $i$ mantiene la posizione della parentesi corrispondente all'$i$-esima pioniera e, infine, il vettore
-$\mathbf{O}$ che per ogni blocco $i$ mantiene la posizione della prima aperta a sinistra dell'inizio del blocco
-avente eccesso $x-1$, dove $x$ è il minimo eccesso del blocco. Per la rappresentazione, definiamo $l = \log_2(n)$.
 \begin{theorem}
-	Se ci sono $k$ blocchi, vi sono al massimo $2^k - 3$ coppie di pionieri.
+	In una parola di Dyck divisa in $k>1$ blocchi esistono al più $2k-3$ pioniere.
 \end{theorem}
+% TODO
 \begin{proof}
-	Costruiamo un grafo $G = (V, E)$ dove $V$ sono i blocchi ed esiste un lato tra un blocco $x$ e $y$ se
-	e solo se $x$ contiene una pioniera cha ha in $y$ la sua corrispondente.
-	Dimostriamo per induzione su $k$: vi sono due casi.
-	\begin{itemize}
-		\item se l'insieme di blocchi è separabile, ossia esiste una posizione nella parola sulla quale
-		      ``non passano archi'', la parola è debolmente bilanciate ed è scomponibile in due diverse
-		      parole ben formate. Allora, per ipotesi induttiva, il numero di pioniere nella prima
-		      parte è al più $2p - 3$ e il numero di pioniere nella seconda parte è al più $2(k - p + 1) - 3$;
-		      allora il numero di pioniere è al più
-		      $$
-			      2p - 3 + 2 k - 2p + 2 - 3 = 2k - 4 \leq 2k - 3
-		      $$
-		\item se l'insieme di blocchi non è separabile, ossia la parola è fortemente
-		      bilanciate e non è scomponibile in due parole diverse, si prende la
-		      prima coppia di parentesi lontane che si trova in $w$ e si rimuove. La parola risultante,
-		      che chiamiamo $w'$, gode della proprietà che si vuole dimostrare. Il numero
-		      di pioniere in $w$ è quindi al più la somma delle pioniere in $w'$ e la pioniera rimossa
-		      $$
-			      2k - 4  + 1 = 2k - 3
-		      $$
+	\dots
 
-	\end{itemize}
+	\begin{figure}[ht]
+		\centering
+		\begin{subfigure}{0.45\textwidth}
+			\centering
+			\input{img/dyck_lemma_caso1.tikz}
+			\subcaption{Caso 1.}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}{0.45\textwidth}
+			\centering
+			\input{img/dyck_lemma_caso2.tikz}
+			\subcaption{Caso $2$.}
+		\end{subfigure}
+		\caption{Casi per la dimostrazione dell'upper bound al numero di pioniere.}
+		\label{fig:proof_pioneers}
+	\end{figure}
 \end{proof}
 
-\begin{figure}[h]
-	\centering
-	\begin{subfigure}{0.45\textwidth}
-		\centering
-		\tikzset{every picture/.style={line width=0.75pt}} %set default line width to 0.75pt        
-		\begin{tikzpicture}[x=0.75pt,y=0.75pt,yscale=-1,xscale=1]
-			%uncomment if require: \path (0,300); %set diagram left start at 0, and has height of 300
+% Capire e spiegare meglio
+La struttura si compone di diverse componenti:
+\begin{itemize}
+	\item un vettore $E$ di $k$ elementi, contenente per ogni blocco il valore della funzione di eccesso nella sua prima posizione;
+	      % TODO: capire se per pioniere aperte o tutte
+	\item un vettore $M$ che contiene per ogni pioniera aperta l'indice della sua corrispondente;
+	      % TODO: capire se per pioniere aperte o tutte
+	\item un vettore $p$ di bit che identifica a $1$ le pioniere, a cui è associata una struttura succinta di rango e selezione;
+	\item un vettore $O$ di $k$ elementi, contenente per ogni blocco l'ultima posizione prima di esso in cui la funzione di eccesso è minore del minimo in tale blocco;
+	\item la parola $w$ memorizzata come sequenza di bit (un valore booleano per le parentesi aperte e l'altro per le chiuse).
+\end{itemize}
 
-			%Shape: Rectangle [id:dp5751448069992374] 
-			\draw   (100,130) -- (170,130) -- (170,150) -- (100,150) -- cycle ;
-			%Shape: Rectangle [id:dp8956649728081978] 
-			\draw   (190,130) -- (230,130) -- (230,150) -- (190,150) -- cycle ;
-			%Shape: Rectangle [id:dp8836798951210239] 
-			\draw   (250,130) -- (290,130) -- (290,150) -- (250,150) -- cycle ;
-			%Shape: Rectangle [id:dp07169651712981018] 
-			\draw   (300,130) -- (380,130) -- (380,150) -- (300,150) -- cycle ;
-			%Straight Lines [id:da8396678932783305] 
-			\draw    (110,130) -- (110,100) -- (260,100) -- (260,128) ;
-			\draw [shift={(260,130)}, rotate = 270] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
-			%Straight Lines [id:da8376287767119306] 
-			\draw    (120,130) -- (120,110) -- (220,110) -- (220,128) ;
-			\draw [shift={(220,130)}, rotate = 270] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
-			%Straight Lines [id:da7343053938900628] 
-			\draw    (200,150) -- (200,170) -- (260,170) -- (260,152) ;
-			\draw [shift={(260,150)}, rotate = 90] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
-			%Straight Lines [id:da02843704523195245] 
-			\draw    (280,130) -- (280,110) -- (330,110) -- (330,128) ;
-			\draw [shift={(330,130)}, rotate = 270] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
-			%Straight Lines [id:da4532725638041315] 
-			\draw  [dash pattern={on 3.75pt off 3pt on 7.5pt off 1.5pt}]  (270,90) -- (270,180) ;
-			%Straight Lines [id:da17944476616348748] 
-			\draw    (100,180) -- (100,190) -- (290,190) -- (290,180) ;
-			%Straight Lines [id:da1753890360224526] 
-			\draw    (250,200) -- (250,210) -- (380,210) -- (380,200) ;
+% TODO: implementazione dell'interfaccia
 
-			% Text Node
-			\draw (181,192.4) node [anchor=north west][inner sep=0.75pt]    {$p$};
-			% Text Node
-			\draw (281,212.4) node [anchor=north west][inner sep=0.75pt]    {$k\ -\ p\ +\ 1$};
-		\end{tikzpicture}
-		\subcaption{Caso $1$.}
-	\end{subfigure}
-	\hfill
-	\begin{subfigure}{0.45\textwidth}
-
-		\tikzset{
-			pattern size/.store in=\mcSize,
-			pattern size = 5pt,
-			pattern thickness/.store in=\mcThickness,
-			pattern thickness = 0.3pt,
-			pattern radius/.store in=\mcRadius,
-			pattern radius = 1pt}
-		\makeatletter
-		\pgfutil@ifundefined{pgf@pattern@name@_y43ms7xnt}{
-			\pgfdeclarepatternformonly[\mcThickness,\mcSize]{_y43ms7xnt}
-			{\pgfqpoint{0pt}{-\mcThickness}}
-			{\pgfpoint{\mcSize}{\mcSize}}
-			{\pgfpoint{\mcSize}{\mcSize}}
-			{
-				\pgfsetcolor{\tikz@pattern@color}
-				\pgfsetlinewidth{\mcThickness}
-				\pgfpathmoveto{\pgfqpoint{0pt}{\mcSize}}
-				\pgfpathlineto{\pgfpoint{\mcSize+\mcThickness}{-\mcThickness}}
-				\pgfusepath{stroke}
-			}}
-		\makeatother
-
-		% Pattern Info
-
-		\tikzset{
-			pattern size/.store in=\mcSize,
-			pattern size = 5pt,
-			pattern thickness/.store in=\mcThickness,
-			pattern thickness = 0.3pt,
-			pattern radius/.store in=\mcRadius,
-			pattern radius = 1pt}
-		\makeatletter
-		\pgfutil@ifundefined{pgf@pattern@name@_mifsyi5bu}{
-			\pgfdeclarepatternformonly[\mcThickness,\mcSize]{_mifsyi5bu}
-			{\pgfqpoint{0pt}{0pt}}
-			{\pgfpoint{\mcSize+\mcThickness}{\mcSize+\mcThickness}}
-			{\pgfpoint{\mcSize}{\mcSize}}
-			{
-				\pgfsetcolor{\tikz@pattern@color}
-				\pgfsetlinewidth{\mcThickness}
-				\pgfpathmoveto{\pgfqpoint{0pt}{0pt}}
-				\pgfpathlineto{\pgfpoint{\mcSize+\mcThickness}{\mcSize+\mcThickness}}
-				\pgfusepath{stroke}
-			}}
-		\makeatother
-		\tikzset{every picture/.style={line width=0.75pt}} %set default line width to 0.75pt        
-
-		\begin{tikzpicture}[x=0.75pt,y=0.75pt,yscale=-1,xscale=1]
-			%uncomment if require: \path (0,300); %set diagram left start at 0, and has height of 300
-
-			%Shape: Rectangle [id:dp5339690558371227] 
-			\draw   (120,150) -- (190,150) -- (190,170) -- (120,170) -- cycle ;
-			%Straight Lines [id:da850734740747954] 
-			\draw    (140,150) -- (140,120) -- (280,120) -- (280,148) ;
-			\draw [shift={(280,150)}, rotate = 270] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
-			%Straight Lines [id:da9735874841202442] 
-			\draw    (150,150) -- (150,130) -- (240,130) -- (240,148) ;
-			\draw [shift={(240,150)}, rotate = 270] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
-			%Straight Lines [id:da863983070784418] 
-			\draw    (220,170) -- (220,190) -- (280,190) -- (280,172) ;
-			\draw [shift={(280,170)}, rotate = 90] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
-			%Straight Lines [id:da6442133803721162] 
-			\draw    (300,150) -- (300,130) -- (350,130) -- (350,148) ;
-			\draw [shift={(350,150)}, rotate = 270] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
-			%Shape: Rectangle [id:dp881091443202814] 
-			\draw   (190,150) -- (260,150) -- (260,170) -- (190,170) -- cycle ;
-			%Shape: Rectangle [id:dp2693088037465775] 
-			\draw   (260,150) -- (330,150) -- (330,170) -- (260,170) -- cycle ;
-			%Shape: Rectangle [id:dp6243374270107382] 
-			\draw   (330,150) -- (400,150) -- (400,170) -- (330,170) -- cycle ;
-			%Straight Lines [id:da11664171795224454] 
-			\draw    (150,170) -- (150,190) -- (210,190) -- (210,172) ;
-			\draw [shift={(210,170)}, rotate = 90] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
-			%Straight Lines [id:da43843554948583285] 
-			\draw    (130,150) -- (130,140.71) -- (130,110) -- (390,110) -- (390,148) ;
-			\draw [shift={(390,150)}, rotate = 270] [color={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.75]    (10.93,-3.29) .. controls (6.95,-1.4) and (3.31,-0.3) .. (0,0) .. controls (3.31,0.3) and (6.95,1.4) .. (10.93,3.29)   ;
-			%Shape: Rectangle [id:dp45540530016238834] 
-			\draw  [pattern=_y43ms7xnt,pattern size=2.0999999999999996pt,pattern thickness=0.75pt,pattern radius=0pt, pattern color={rgb, 255:red, 0; green, 0; blue, 0}][dash pattern={on 0.84pt off 2.51pt}] (130,150) -- (120,150) -- (120,170) -- (130,170) -- cycle ;
-			%Shape: Rectangle [id:dp21031590903119124] 
-			\draw  [pattern=_mifsyi5bu,pattern size=2.0999999999999996pt,pattern thickness=0.75pt,pattern radius=0pt, pattern color={rgb, 255:red, 0; green, 0; blue, 0}][dash pattern={on 0.84pt off 2.51pt}] (400,150) -- (390,150) -- (390,170) -- (400,170) -- cycle ;
-		\end{tikzpicture}
-
-		\subcaption{Caso $2$.}
-	\end{subfigure}
-	\caption{Dimostrazione induttiva del numero di pioniere in una parola ben parentesizzata.}
-	\label{fig:proof_pioneers}
-\end{figure}
-
-Quindi, lo spazio occupato da queste strutture è:
-$$
+Quindi, lo spazio occupato in bit da queste strutture è:
+\begin{equation*}
 	\begin{aligned}
-		 & w          &  & n                                                                                          \\
-		 & p          &  & n + o(n) \text{ (sarà necessario introdurre la struttura di rango)}                        \\
-		 & \mathbf{E} &  & k  \log_2(n)                                                                               \\
-		 & \mathbf{O} &  & k  \log_2(n)                                                                               \\
-		 & \mathbf{M} &  & \text{pioniere} \cdot \log_2(n) < 2(2k - 3) \log_2(n) = (4k - 6) \log_2(n) \le 4k\log_2(n)
+		 & E & k  \log_2(n)      \\
+		 & M & \leq (2k-3)\log n \\
+		 & p & n + o(n)          \\
+		 & O & k  \log_2(n)      \\
+		 & w & n
 	\end{aligned}
-$$
-Sommando, lo spazio occupato è $D_n = 2n + o(n) + 6k \log_2(n) = 2n + 6n + o(n) = 8n + o(n)$ bit.
+\end{equation*}
+In totale $D_n = 2n + o(n) + 6k \log_2(n) = 2n + 6n + o(n) = 8n + o(n)$ bit. Per confrontare questa grandezza con il minimum theoretical lower bound consideriamo due insiemi isomorfi alle parentesi ben bilanciate: le foreste ordinate e gli alberi binari.
 
-\subsubsection{Implementazione}
-Per implementare la funzione $\mathbf{find\_close}$ che, trovata una parentesi aperta in posizione $p$, restituisce
-la posizione in cui si chiude, si deve:
-\begin{enumerate}
-	\item calcolare gli eccessi di tutte le posizioni del blocco al quale appartiene $p$ con $E$ (tempo logaritmico);
-	\item se $p$ è vicina, ossia esiste un'altra posizione nel blocco con lo stesso eccesso,
-	      la funzione è completa. Altrimenti, $p$ è la posizione di una parentesi lontana e
-	      $j = \mathbf{rank_p}(p)$ è l'indice della pioniera che precede $p$; si può usare $M[j] = p'$ per
-	      calcolare la posizione in cui si chiude la pioniera che precede $p$, che diciamo essere in un
-	      blocco $b$. Scorrendo indietro, per trovare la chiusa corrispondente, basta trovare la
-	      posizione con eccesso uguale all'eccesso di $p$.
-\end{enumerate}
 
-Tutto questo richiede tempo $\log_2(n)$ e analogamente per l'implementazione di $\mathbf{find\_open}$.
-Per l'implementazione di $\mathbf{enclosed}$, che cerca la prima parentesi aperta che racchiude la parentesi
-in posizione $p$, ipotizziamo di aver già trovato la corrispondente $\bar{p}$ con una find e ammettiamo che
-l'eccesso di entrambe sia $e$. Inizialmente, si cerca alla sinistra della posizione della parentesi aperta
-se c'è una posizione con eccesso $e-1$, che segna l'aperta precedente. Se, nel blocco al quale appartiene
-l'aperta, tutte le posizioni hanno eccesso $\ge e-1$, si cerca per una chiusa di eccesso $e-1$ nella parte
-a destra del blocco in cui giace la chiusa. Se anche in questo caso non si trova, significa che la parentesi
-che si cerca è di eccesso $e-1$ che giace nel blocco a sinistra a quello della parentesi aperta, che ha
-come valore di eccesso minore di tale blocco. In tal caso, basta usare il vettore $\mathbf{O}$ per trovare
-la posizione della parentesi cercata.
 
 \subsection{Lower bound per parentesi ben bilanciate}
 \subsubsection{Foreste ordinate}
