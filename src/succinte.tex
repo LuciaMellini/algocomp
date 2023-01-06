@@ -786,190 +786,33 @@ Ergo, la struttura vista per l'ADT delle parentesi ben bilanciate che ha un cost
 
 
 
-\section{Struttura per hash minimali perfetti}
-\subsection{Funzioni di hash}
-Le funzioni di hash compaiono in molti contesti diversi e un'applicazione
-`famosa' sono le \textit{tabelle di hash}.
-Nel modo più generale, dato un universo $U$ infinito o \textit{molto grande} e un numero $m \in \mathbb{N}$,
-che è il \textit{numero di bucket}, una funzione di hash è
-$$
-	h: U \rightarrow m
-$$
+\section{Tecniche di hashing}
+Una funzione di hash $h:U\to m$ associa ogni elemento di un universo $U$ a un numero da $0$ a $m-1$, detto bucket.
 
-Le funzioni di hash, che denominiamo $H_{U,m}$, sono infinite se $U$ è infinito, mentre sono finite
-se $U$ è finito, in particolare $|H_{U,m}| = m^{|U|}$.
-La funzione $h$ deve avere alcune proprietà: prendiamo come esempio proprio le tabelle di hash,
-utilizzate per memorizzare un sottoinsieme $S \subseteq U$, per esempio delle stringhe su un certo
-alfabeto $\Sigma = \{a, b, c, d\}$. Fissato un $m \in \mathbb{N}$, la funzione è
-$$
-	h: \Sigma^* \leadsto m
-$$
-vedendo i simboli in $\Sigma$ come un'enumerazione $a = 0, b = 1, c =2, d = 3$,
-una funzione di hash potrebbe semplicemente sommare i simboli di una stringa e
-operarne il modulo in $m$, in modo che il valore risultante sia $0 \leq h \le m-1 $.
+Se $U$ è finito, il numero di funzioni di hash con $m$ bucket su universo $U$ è $m^{|U|}$.
 
-Lo scopo è mantenere una tabella, spesso realizzata come un vettore di liste di
-elementi, i cui indici sono esattamente gli hash possibili che la funzione $h$
-calcola. In questo modo, è possibile accedere (quasi) direttamente alle
-parole nella tabella\footnote{Vi sono principalmente due modi per costruire
-	tabelle di hash: \textit{open addressing} e \textit{separate chaining}.
-	In questo frangente stiamo analizzando la versione con separate chaining.}.
-In termini pratici, partendo da una tabella vuota, quando
-si vuole inserire una stringa $s = "foo"$ nella tabella, si utilizza la funzione
-di hash per calcolare $h(s) = h_1$. Il valore calcolato sarà l'indice della
-tabella dove inserire il riferimento alla stringa.
-
-\begin{figure}[h]
-	\centering
-	\tikzset{every picture/.style={line width=0.75pt}} %set default line width to 0.75pt        
-
-	\begin{tikzpicture}[x=0.75pt,y=0.75pt,yscale=-1,xscale=1]
-		%uncomment if require: \path (0,300); %set diagram left start at 0, and has height of 300
-
-		%Shape: Rectangle [id:dp9579578997678553] 
-		\draw   (70,100) -- (110,100) -- (110,120) -- (70,120) -- cycle ;
-		%Shape: Rectangle [id:dp027628855530104857] 
-		\draw   (70,80) -- (110,80) -- (110,100) -- (70,100) -- cycle ;
-		%Shape: Rectangle [id:dp8143559001814539] 
-		\draw   (70,140) -- (110,140) -- (110,160) -- (70,160) -- cycle ;
-		%Shape: Rectangle [id:dp38276393364199424] 
-		\draw   (70,120) -- (110,120) -- (110,140) -- (70,140) -- cycle ;
-		%Straight Lines [id:da801581038753237] 
-		\draw    (110,90) -- (137,90) ;
-		\draw [shift={(140,90)}, rotate = 180] [fill={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.08]  [draw opacity=0] (8.93,-4.29) -- (0,0) -- (8.93,4.29) -- cycle    ;
-		%Shape: Rectangle [id:dp3050844046907898] 
-		\draw   (140,80) -- (180,80) -- (180,100) -- (140,100) -- cycle ;
-		%Shape: Rectangle [id:dp41513696416167833] 
-		\draw   (170,80) -- (180,80) -- (180,100) -- (170,100) -- cycle ;
-
-		%Shape: Rectangle [id:dp43239961582118536] 
-		\draw   (210,80) -- (250,80) -- (250,100) -- (210,100) -- cycle ;
-		%Shape: Rectangle [id:dp38503115889664563] 
-		\draw   (240,80) -- (250,80) -- (250,100) -- (240,100) -- cycle ;
-
-		%Straight Lines [id:da3303160944704562] 
-		\draw    (180,90) -- (207,90) ;
-		\draw [shift={(210,90)}, rotate = 180] [fill={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.08]  [draw opacity=0] (8.93,-4.29) -- (0,0) -- (8.93,4.29) -- cycle    ;
-		%Straight Lines [id:da047149376903893425] 
-		\draw    (110,149) -- (137,149) ;
-		\draw [shift={(140,149)}, rotate = 180] [fill={rgb, 255:red, 0; green, 0; blue, 0 }  ][line width=0.08]  [draw opacity=0] (8.93,-4.29) -- (0,0) -- (8.93,4.29) -- cycle    ;
-		%Shape: Rectangle [id:dp591261104910037] 
-		\draw   (140,139) -- (180,139) -- (180,159) -- (140,159) -- cycle ;
-		%Shape: Rectangle [id:dp4443187367264515] 
-		\draw   (170,139) -- (180,139) -- (180,159) -- (170,159) -- cycle ;
-
-
-		% Text Node
-		\draw (58,85) node [anchor=north west][inner sep=0.75pt]   [align=left] {0};
-		% Text Node
-		\draw (58,105) node [anchor=north west][inner sep=0.75pt]   [align=left] {1};
-		% Text Node
-		\draw (54,125) node [anchor=north west][inner sep=0.75pt]   [align=left] {$\displaystyle \cdots $};
-		% Text Node
-		\draw (45,145) node [anchor=north west][inner sep=0.75pt]   [align=left] {m-1};
-		% Text Node
-		\draw (141,82) node [anchor=north west][inner sep=0.75pt]   [align=left] {foo};
-		% Text Node
-		\draw (211,82) node [anchor=north west][inner sep=0.75pt]   [align=left] {bar};
-		% Text Node
-		\draw (141,141) node [anchor=north west][inner sep=0.75pt]   [align=left] {baz};
-	\end{tikzpicture}
-	\caption{Esempio di una tabella di hash con separate chaining.}
-	\label{fig:hashtable_example}
-\end{figure}
-
-Possono accadere dei conflitti, ossia due stringhe $s_1$ e $s_2$ tali che
-$h(s_1) = h(s_2)$; per ovviare a questo problema si descrive $M$ come una mappa di liste, ossia
-ad un indice $h_1$ di $M$ corrisponde una lista di stringhe.
-
-\subsubsection{Requisiti}
-La tabella $M$ funziona con qualsiasi funzione di hash $h$ (anche $h(\cdot) = 0$),
-ma l'efficienza di $M$ cambia al suo variare, fino al denegenerare in una lista.
-Per far funzionare ``bene'' $M$ è necessario che
+L'analisi che segue si basa su alcune assunzioni, solo approssimabili nella pratica:
+% TODO: costante rispetto a cosa?
 \begin{itemize}
-	\setlength\itemsep{0pt}
-	\item $h$ sia veloce da calcolare; e
-	\item $h$ divida l'universo $U$ in \textit{buckets} in modo tale che le
-	      controimmagini siano più o meno \textit{grandi uguali}.
-	      In altri termini, se guardiamo $\Sigma^*$ e guardiamo come
-	      $h$ ne partiziona gli elementi, vorremmo che i blocchi (o bucket)
-	      della partizione siano più o meno grandi uguali e non ci sia
-	      qualche blocco che contiene molti più elementi degli
-	      altri.
-	      % disegno pagina 1 15-12-2021 buckets nell'universo. 
+	\item $h$ è calcolabile in tempo costante;
+	\item $h$ occupa spazio costante;
+	\item fissati $U$ e $m$ è possibile estrarre uniformemente a caso una funzione di hash $h:U\to m$ (\flang{full randomness assumption}).
 \end{itemize}
-Questi requisiti sono esprimibili formalmente ovviamente, ma solitamente oltre
-a questi requisiti di base ve ne sono altri che dipendono dall'utilizzo
-che si vuole fare della funzione; nel nostro caso, facciamo le seguenti
-assunzioni: la prima, chiamata \textit{full randomness assumption},
-è che possiamo estrarre uniformemente una funzione $h$ dall'insieme $\mathcal{H}_{U,m}$.
 
-La seconda è che $h$ sia calcolabile in tempo e spazio costante, inoltre occupa
-spazio costante in termini di codice (non usa array arbitrariamente grandi, ...).
-Questa assunzione è normalmente inattuabile: si pensi al caso in cui $U = \Sigma^*$:
-si dovrebbero considerare tutte le possibili funzioni dalle stringhe ai naturali
-minori di $m$, che sono infinite e tra le quali ce ne sono anche di non calcolabili.
 
-\subsubsection{Rappresentazione}
-Ciò che si può fare è invece considerare un universo limitato con un
-upper bound dipendente da un qualche intero $k$.
-Chiaramente si perde della `randomness', ma il vantaggio è che molto spesso
-i risultati che si ottengono sotto l'assunzione di completa casualità si possono
-portare anche sotto $U$ così definito, magari con qualche approssimazione.
+\subsection{Sequenze di peeling di un grafo}
+Riportiamo un risultato su grafi che tornerà utile per l'analisi sull'hashing.
 
-Supponiamo quindi di avere $U = \Sigma^{\leq k}$; vogliamo scrivere delle
-funzioni $h: U \rightarrow m$, alcune di esse possono essere descritte nel
-seguente modo.
-Si usa un array $\mathbf{p}$ chiamato \textit{array dei pesi} contenente $k$ valori,
-inizializzandolo a valori pseudocasuali nell'insieme $\{0, \cdots, m-1\}$.
-Quando si vuole calcolare l'hash di una stringa $s = "foo"$ si considera il valore
-di ogni lettera della stringa e si moltiplica per il peso di quel carattere
-in senso posizionale, ossia il primo peso è associato al primo carattere della stringa,
-il secondo peso al secondo carattere e così via; quindi si sommano i risultati e
-si computa il modulo $m$. Per esempio, se
-$$
-	a = 0, b = 1, c = 2, \cdots, f = 5, \cdots, o = 14, \cdots
-$$
-e
-$$
-	\mathbf{p} = [15, 86, 90, \cdots]
-$$
-Il calcolo dell'hash è
-$$
-	h("foo") = ((5 * 15) + (14 * 86) + (14*90)) \mod m
-$$
-ottendo un valore che si calcola in un tempo lineare nella lunghezza della stringa
-diverso per ogni possibile scelta dei pesi. Cioè, non stiamo
-scegliendo tra tutte le possibili funzioni di hash, bensì scegliamo tra le funzioni
-di hash caratterizzabili dal vettore $\mathbf{p}$, ossia in $m^k$ modi.
-Queste funzioni non occupano molto spazio e si calcolano in un tempo non
-costante ma logaritmico nella dimensione dell'universo.
+\begin{defin}
+	Sia $G=(V,E)$ un grafo non orientato. Una sequenza di peeling per $G$ è una sequenza di coppie $\tuple{e_i,x_i}\in E\times V$, con $x_i\in e_i$, in cui appaiono tutti i lati e tale per cui nessun vertice $x_i$ (detto hinge) è apparso nei lati $i$.
+\end{defin}
 
-\subsection{Relazione con i grafi}
-\subsubsection{Sequenza di peeling di un grafo}
-Si supponga di avere un grafo $G = (V,E)$ non orientato. Una \textbf{sequenza di peeling} è
-una sequenza di coppie di archi e vertici in cui appaiono tutti i lati e uno dei
-due vertici incidenti a tale lato. Ogni vertice che appare è chiamato \textit{hinge}
-della sequenza. La sequenza deve essere tale per cui nessun vertice hinge $x_i$
-è apparso nei lati che precedono $i$.
-
-\begin{figure}[htpb]
+\begin{figure}[ht]
 	\begin{center}
+		% TODO: pessimo esempio, migliorare
 		\begin{subfigure}[b]{0.45\textwidth}
 			\begin{center}
-				\begin{tikzpicture}
-					\node [circle,fill,label=above:{A},inner sep=1pt](A) at (0,0) {};
-					\node [circle,fill,label=above:{B},inner sep=1pt](B) at (1,-1) {};
-					\node [circle,fill,label=above:{C},inner sep=1pt](C) at (2,0) {};
-					\node [circle,fill,label=above:{D},inner sep=1pt](D) at (4,0) {};
-					\node [circle,fill,label=above:{E},inner sep=1pt](E) at (6,0) {};
-
-					\draw (A) -- (C) node [midway,above] {a};
-					\draw (B) -- (C) node [midway,above] {b};
-					\draw (C) -- (D) node [midway,above] {c};
-					\draw (D) -- (E) node [midway,above] {d};
-				\end{tikzpicture}
-
+				\input{img/hash_peeling.tikz}
 			\end{center}
 		\end{subfigure}
 		\begin{subfigure}[b]{0.45\textwidth}
@@ -987,200 +830,62 @@ della sequenza. La sequenza deve essere tale per cui nessun vertice hinge $x_i$
 	\label{fig:example_peeling}
 \end{figure}
 
-Prendendo come esempio il grafo in \cref{fig:example_peeling}, per verificare una
-sequenza di peeling si deve innanzitutto verificare che tutti i lati
-appaiano nella sequenza; quindi, si verifica che ogni vertice non sia mai
-comparso prima: per esempio, avendo scelto il lato $(A,B)$ invece di $(A,C)$,
-non si sarebbe potuto scegliere il vertice $B$ da associare al lato $(B,C)$.
-
-Non tutti i grafi ammettono una sequenza di peeling:
+Il risultato fondamentale sulle sequenze di peeling lega la loro presenza a quella di cicli:
 \begin{theorem}
-	Un grafo $G$ ammette una sequenza di peeling se e solo se è aciclico.
+	Un grafo ammette una sequenza di peeling se e solo se è aciclico.
 \end{theorem}
-\begin{proof}
 
-	$\implies$ Per assurdo, si supponga che
-	$\langle\{e_0, x_0\}, \cdots, \{e_{m-1}, x_{m-1}\}\rangle$
-	sia una sequenza di peeling e che esista un ciclo sui vertici
-	$y_1, y_2, \cdots, y_k$ e i relativi lati $\{y_1, y_2\}, \cdots, \{y_{k-1}, y_k\}$.
-	Sia $\bar{i}$ l'indice massimo della sequenza del ciclo.
-	Inserendo tutti i lati del ciclo nella sequenza, quando si arriva ad
-	inserire l'ultimo lato del ciclo, non ci sarà modo di scegliere un nodo
-	che ancora non appare nella sequenza.
+\subsubsection{Sequenze di peeling di un ipergrafo}
+Un $r$-ipergrafo $G=(V,E)$ è composto da un insieme $V$ di vertici e uno $E$ di iperlati, dove ogni iperlato è un insieme di $r$ vertici (i.e. $E \subseteq {V \choose r}$).
 
-	$\impliedby$ Per induzione su $|E|$. Omessa.
-	%(esercizio). Hint: si parte dai lati più esterni. 
-\end{proof}
-
-\subsubsection{Ipergrafi}
-Vogliamo ora generalizzare la nozione di sequenza di peeling agli ipergrafi.
-
-\paragraph{Definizione}
-Un $r$-ipergrafo è $G = (V, E)$ di vertici e \textit{iperlati} dove ogni iperlato è un
-insieme di $r$ vertici, ossia $E \subseteq {V \choose r}$. Un esempio è
-in \cref{fig:example:hypergraph}.
-
-\begin{figure}[htpb]
-	\begin{center}
-		\begin{tikzpicture}[scale=1, transform shape]
-			\node (f) at (0,0) {$F$};
-			\node (g) at (1,0) {$G$};
-			\node (e) at (2,0) {$E$};
-			\node (d) at (2,1) {$D$};
-			\node (a) at (2,2) {$A$};
-			\node (b) at (3,2) {$B$};
-
-			\node [draw, rounded corners,inner sep=0pt,fit=(f) (g)] {};
-			\node [draw, dashed, rounded corners,inner sep=5pt,fit=(g) (e)] {};
-			\node [draw, rounded corners,inner sep=0pt,fit=(a) (d) (e)] {};
-			\node [draw, dashed, rounded corners,inner sep=5pt,fit=(a) (b) (d)] (fd){};
-		\end{tikzpicture}
-	\end{center}
-	\caption{Esempio di ipergrafo.}%
-	\label{fig:example:hypergraph}
-\end{figure}
-
-Non esiste una nozione di aciclicità per ipergrafi, mentre esiste una nozione di
-sequenza di peeling: una sequenza di peeling per un $r$-ipergrafo è una sequenza
-dei suoi iperlati ai quali si associa un hinge in modo tale che non sia mai apparso
-negli iperlati precedenti.
-Per questo motivo non si generalizza la nozione di aciclicità bensì quella di sequenza di peeling;
-si dice che un ipergrafo è aciclico se e solo se ammette una sequenza di peeling.
+Le sequenze di peeling si definiscono sugli ipergrafi in modo del tutto analogo a quello per i grafi, come un insieme di coppie iperlato-hinge. Per definizione, un ipergrafo è aciclico se e solo se ammette una sequenza di peeling.
 
 
-\subsection{Tecnica MWHC}
-\subsubsection{Funzioni statiche}
-Il nostro obiettivo è memorizzare funzioni statiche.
-Dato un universo $U$, un sottoinsieme fissato $X \subseteq U$ e $r \in \mathbb{N}$
-vogliamo memorizzare una funzione
-$$
-	f: X \rightarrow 2^r
-$$
-di nuovo, si immagini $U$ come l'insieme dei caratteri ASCII;
-una funzione $f$ può essere come quella in \cref{tab:example:static_func},
-in cui $X$ è l'insieme di quelle tre stringhe: a noi non interessa
-memorizzare stringhe diverse da quelle.
 
-\begin{table}[htpb]
-	\begin{tabular}{c|c c}
-		x              & $f(x)$          &    \\
-		\hline                                \\
-		Paolo Boldi    & \texttt{00111}  & 7  \\
-		Anna Zuppi     & \texttt{101000} & 20 \\
-		Giovanni Galli & \texttt{101110} & 23
-	\end{tabular}
-	\centering
-	\caption{Esempio di funzione statica.}
-	\label{tab:example:static_func}
-\end{table}
+\subsection{La tecnica MWHC}
+La tecnica MWHC\footnote{Da Majewski Wormald Havas Czech \cite{Majewski:96:MWHC}} mira alla memorizzazione di un dizionario statico (ossia immutabile).
+Si consideri un insieme universo $U$ e un insieme $S\subset U$ di chiavi tale che $n:=\card S\ll\card U$. Si fissi inoltre una costante $r$.
+Un dizionario $D$ ha input un valore $x\in U$ e produce un output. Tale output è vincolato se $x\in S$ a un valore $f(x)$, dove la funzione $f:S\to 2^r$ si dice \emph{prescritta}, mentre può consistere in qualunque valore se $x\in U\setminus S$.
 
-Memorizzare una funzione significa che vogliamo ricavare una struttura
-dati $D$ tale che permette di valutare un input in modo da ottenere
-il valore di $f(x)$ ossia, per esempio, $"Paolo Boldi" \mapsto 00111$ e così via, mentre
-il comportamento inteso per gli input non appartenenti all'insieme $X$
-che vogliamo memorizzare è irrilevante.
-La funzione $f$ si definisce \textit{statica} poiché è paragonabile
-alla struttura \textit{dizionario} nei linguaggi di programmazione come
-Python, benché questa struttura sia immodificabile e
-non ci sia modo di sapere se una certa chiave è presente o meno.
+La tecnica HWHC permette il calcolo della prescritta di una data chiave senza la necessità di memorizzare tale chiave. Per fare ciò, vengono estratte casualmente due funzioni di hash $h_1,h_2:U\to m$.
+Viene poi costruito un grafo non orientato $G=(V,E)$, dove $V=m$ e $E=\set{(h_1(x),h_2(x))\mid x\in S}$.
+Se si verifica una delle seguenti condizioni, l'estrazione di $h_1$ e $h_2$ viene ripetuta:
+\begin{itemize}
+	\item $\exists x,y\mid \set{h_1(x),h_2(x)}=\set{h_1(y)=h_2(y)}$;
+	\item $\exists x\mid h_1(x)=h_2(x)$;
+	\item $G$ contiene cicli.
+\end{itemize}
 
-\subsubsection{Rappresentazione}
-Per costruire una rappresentazione succinta si utilizza la tecnica
-MWHC\footnote{Majewski, Worwald, Havas, Czech}.
-Inizialmente si fissa un $m$ intero e si scelgono uniformemente due funzioni hash
-$$
-	h_1, h_2 : U \rightarrow m
-$$
-Assumiamo che $\forall x \in X ~ h_1(x) \neq h_2(x)$.
-Costruiamo un grafo i cui vertici sono i numeri $0, \cdots, m-1$ e i lati
-corrispondono agli elementi dell'insieme $X$, con l'idea che alla chiave $x$
-corrisponde il lato $(h_1(x), h_2(x))$.
+Per poter calcolare i valori di $f$ senza doverli memorizzare, si costruisce un sistema di $n$ equazioni, una per ogni $x\in S$, del tipo
+\begin{equation*}
+	(w_{h_1(x)} + w_{h_2(x)}) \mod 2^r = f(x) \text,
+\end{equation*}
+dove $w_0,\dots,w_{m-1}$ sono variabili.
 
-Seguendo l'esempio in \cref{tab:example:static_func}, immaginiamo che
-le due funzioni calcolino l'hash delle stringhe in $X$ come descritto
-in \cref{tab:static_hashes}, supponendo $m = 17$ e $r = 5$. 
-Si può ora costruire un grafo costruito
-come in \cref{fig:static_graph}: grazie all'assunzione precedente,
-ossia la differenza dei due hash per ogni chiave, sappiamo che nel
-grafo non vi sono cappi. In caso accada, si generano due nuove
-funzioni $h_1$ e $h_2$. Inoltre, vogliamo che il grafo sia
-aciclico e che a nessun lato corrispondano due o più chiavi diverse: anche
-in questi casi si possono generare due nuove funzioni hash.
+Poiché il grafo è aciclico esiste una sequenza di peeling. Ordinando le equazioni come la sequenza (gli indici delle variabili corrispondenti agli elementi di ciascun arco) e risolvendo ciascuna equazione nel suo hinge, si può portare il sistema in una forma risolvibile trivialmente ("a gradini").
+% TODO: rendere l'esempio più chiaro
+Per esempio
+\begin{equation*}
+	\begin{cases}
+		(w_{14} + w_{13}) \mod 2^5 = 20 \\
+		(w_{2} + w_{13}) \mod 2^5 = 23  \\
+		(w_{3} + w_{7}) \mod 2^5 = 7
+	\end{cases}
+\end{equation*}
+Usando come hinge $w_{14} = 20$, $w_{2} = 23$ e $w_{7} = 7$ si risolve il sistema.
 
-\begin{table}[htpb]
-	\begin{tabular}{c | c | c}
-		x              & $h_1(x)$ & $h_2(x)$ \\
-		\hline                               \\
-		Paolo Boldi    & 3        & 7        \\
-		Anna Zuppi     & 14       & 13       \\
-		Giovanni Galli & 13       & 2
-	\end{tabular}
-	\centering
-	\caption{Calcolo di $h_1$ e $h_2$ sulle stringhe nell'insieme $X$.}
-	\label{tab:static_hashes}
-\end{table}
-\begin{figure}[htpb]
-	\begin{center}
-		\begin{tikzpicture}
-			\node [circle,fill,label=above:{0},inner sep=1pt](0) at (0,0) {};
-			\node [circle,fill,label=above:{1},inner sep=1pt](1) at (1,1) {};
-			\node [circle,fill,label=above:{2},inner sep=1pt](2) at (2,1) {};
-			\node [circle,fill,label=above:{3},inner sep=1pt](3) at (3,0.5) {};
-			\node [circle,fill,label=above:{7},inner sep=1pt](7) at (5,0.5) {};
-			\node [circle,fill,label=right:{13},inner sep=1pt](13) at (2,-1) {};
-			\node [circle,fill,label=above:{14},inner sep=1pt](14) at (-1.5,-1) {};
-			\node [circle,fill,label=above:{$\cdots$},inner sep=1pt](d) at (4,-1) {};
+Memorizzate le soluzioni $w_i$ del sistema in un vettore $W$, si può calcolare $f(x)$ per un dato $x\in S$ con la formula
+\begin{equation*}
+	f(x) = (w_{h_1(x)} + w_{h_2(x)}) \mod 2^m
+\end{equation*}
 
-			\draw (14) -- (13) node [midway,above] {zoppi - $20$};
-			\draw (13) -- (2) node [midway,above, label={[rotate=-90]above:{galli - $23$}}] {};
-			\draw (3) -- (7) node [midway,above] {boldi - $7$};
-		\end{tikzpicture}
-
-	\end{center}
-	\caption{Grafo associato per la costruzione di una struttura per funzioni statiche.}%
-	\label{fig:static_graph}
-\end{figure}
-Trasformeremo ora il grafo in un sistema di equazioni: ogni vertice è una variabile $w_0, w_1, \cdots, w_{m-1}$ e ad ogni lato corrisponde
-l'equazione
-$$
-	\forall x \in X ~~ (w_{h_1(x)} + w_{h_2(x)}) \mod 2^r = f(x)
-$$
-Se il grafo è aciclico (che è un'assunzione) il sistema è risolvibile. 
-L'esistenza di una sequenza di peeling (che esiste se e solo se il grafo è aciclico) significa 
-che si possono ordinare le equazioni in modo che una delle due variabili non sia mai 
-comparsa prima: questo significa che la soluzione si può trovare ordinando le equazioni
-e assegnando il valore che rende vera l'equazione alla variabile che non è ancora apparsa. 
-Quindi, per esempio
-$$
-\begin{cases}
-    (w_{14} + w_{13}) \mod 2^5 = 20 \\
-    (w_{2} + w_{13}) \mod 2^5 = 23 \\
-    (w_{3} + w_{7}) \mod 2^5 = 7 \\
-\end{cases}
-$$
-Usando come hinge $w_{14} = 20$, $w_{2} = 23$ e $w_{7} = 7$ si risolve il sistema. 
-
-\subsubsection{Implementazione}
-Una volta memorizzate le soluzioni $w_i$ del sistema in un vettore $\mathbf{w}$, 
-si può calcolare $f(x)$ per ogni $x \in X$ come 
-$$
-f(x) = (w_{h_1(x)} + w_{h_2(x)}) \mod 2^m 
-$$
-Bisogna però decidere la grandezza di $m$, ossia il numero di vertici (o il numero di bucket, o il numero 
-massimo che può risultare da un hash): è facile vedere che se $m$ è ``troppo piccolo'' è molto imporbabile 
-che riescano a soddisfare le condizioni, ossia si troveranno cicli, collisioni e così via. Se si 
-sceglie ``troppo grande'', la struttura che si memorizza occupa molto spazio. 
-Precisamente, questo tradeoff dipende da quanto è probabile che il grafo generato sia aciclico. 
+Per quanto riguarda il dimensionamento di $m$, \cite{Majewski:96:MWHC} dimostra:
 \begin{theorem}
-    Se $m > (2.09 \cdot |X|)$, il grafo è ``quasi sempre'' aciclico. Il numero atteso di tentativi 
-    di generazione di coppie di funzioni hash è circa $2$.
+	Se $m>(2.09n)$. La procedura di selezione di $h_1$ e $h_2$ termina in un numero atteso di $2$ tentativi.
 \end{theorem}
-\begin{proof}
-    Omessa.
-\end{proof}
 
-Naturalmente si può anche calcolare la funzione di un qualcosa che non è tra gli input desiderati e 
-qualcosa verrà prodotto, ma non avrà un senso ben inteso. 
+Adattando la procedura all'utlizzo di un $3$-ipergrafo, il rapporto $\gamma$ tra $m$ e $n$ è minimo: $m>1.23n$.
+
 
 \subsubsection{Spazio}
 Il vettore che dobbiamo memorizzare ha $m$ elementi, ognuno dei quali contiene $r$ bit: in tutto, 
