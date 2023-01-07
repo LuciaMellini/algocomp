@@ -894,3 +894,4 @@ Il sistema della tecnica MWHC è indeterminato, con un numero di gradi di libert
 È sufficiente quindi memorizzare $n$ valori per le variabili, sfruttando un array di $\gamma n$ bit, provvisto di struttura di rango, che indichi quali delle variabili totali sono non nulle.
 
 Lo spazio occupato per questa struttura compressa è di $nr+\gamma n+o(n)=O(nr)$ bit, con un numero di bit per chiave di $r+\gamma$, contro i $r\gamma$ della versione non compressa.
+Il suo utilizzo è quindi conveniente per $r>\frac{\gamma}{\gamma-1}$ ($r>5$ nel caso di $3$-ipergrafi).
