@@ -886,90 +886,11 @@ Per quanto riguarda il dimensionamento di $m$, \cite{Majewski:96:MWHC} dimostra:
 
 Adattando la procedura all'utlizzo di un $3$-ipergrafo, il rapporto $\gamma$ tra $m$ e $n$ è minimo: $m>1.23n$.
 
+Il costo in spazio di questa struttura è quello per salvare i valori di $m$ variabili di $r$ bit. Considerato il rapporto tra $m$ e $n$ regolato da $\gamma$, tale costo è di $\gamma rn$ bit. Poiché si sta memorizzando una funzione $f:n\to 2^r$, le cui sono in numero $(2^r)^n$, l'information theoretical lower bound è $rn$ e pertanto, essendo $\gamma$ costante, la struttura è compatta.
 
-\subsubsection{Spazio}
-Il vettore che dobbiamo memorizzare ha $m$ elementi, ognuno dei quali contiene $r$ bit: in tutto, 
-il vettore occupa spazio $m\cdot r$ bit. Definendo $|X| = n$, dal teorema precedente si ha 
-$m\cdot r \geq 2.09nr$; lo spazio totale si trova aggiungendo lo spazio per memorizzare 
-le funzioni di hash $h_1$ e $h_2$.  
 
-Tutto questo processo può essere eseguito non solo per i grafi (costruiti con $2$ funzioni hash)
-ma anche per gli ipergrafi, costruendo un $r$-ipergrafo utilizzando $r$ funzioni hash. Ci si può 
-quindi chiedere quale sia la costante che rende ipergrafi con $r > 2$ ``quasi sempre'' aciclici: 
-\begin{theorem}
-    Per ogni $k$-ipergrafo esiste una costante $\gamma_k$ tale che se $m > \gamma_k n$ allora 
-    l'ipergrafo ammette quasi sempre una sequenza di peeling. 
-\end{theorem}
-\begin{proof}
-    Omessa.
-\end{proof}
+\subsection{La struttura MWHC compressa}
+Il sistema della tecnica MWHC è indeterminato, con un numero di gradi di libertà di $m-n$ che si possono semplicemente annullare.
+È sufficiente quindi memorizzare $n$ valori per le variabili, sfruttando un array di $\gamma n$ bit, provvisto di struttura di rango, che indichi quali delle variabili totali sono non nulle.
 
-In effetti, le costanti $\gamma_k$ hanno un minimo in $k = 3$: il meglio che si può 
-ottenere è quindi utilizzando $3$ funzioni di hash. Il numero di bit che consuma 
-$\mathbf{w}$ è quindi $1.23nr$ bit.  
-
-\begin{table}[htpb]
-    \centering
-    \begin{tabular}{c|c}
-	 $k$ &  $\gamma_k$ \\ 
-	 \hline 
-	 2 & 2.09 \\
-	 3 & 1.23 \\
-	 $\cdots$ & > 1.23 $\cdots$
-    \end{tabular}
-    \caption{Costanti $\gamma_k$ per $k$-ipergrafi.}
-    \label{tab:gamma_k_hypergraph}
-\end{table}
-
-\subsubsection{Lower bound}
-Per capire che tipo di struttura stiamo costruendo, dobbiamo calcolare l'information-theoretical 
-lower bound. Stiamo memorizzando una funzione da un insieme $X$ fissato ad un insieme $2^r$.  
-Le funzioni di questo tipo sono ${2^{r}}^{|X|} = 2^{r|X|} = 2^{rn}$, definendo come prima $|X| = n$. 
-Quindi, l'information-theoretical lower bound è 
-$$
-Z_n = \log_2(2^{rn}) = rn \text{ bit}
-$$
-e la struttura che abbiamo descritto occupa 
-$$
-D_n = 1.23nr = O(Z_n) \text{ bit}
-$$
-pertanto la struttura è compatta.
-
-\subsubsection{Struttura compressa}
-Si può osservare che nel vettore $\mathbf{w}$ molte entry sono uguali a $0$: il numero 
-di entry diverse da zero è pari al numero di hinge nella sequenza di peeling 
-che risolve il sistema generato dal grafo, quindi $\mathbf{w}$ che (assumendo 
-l'utlizzo di $3$ funzioni di hash) ha esattamente $m = 1.23n$ elementi, al più
-$n$ elementi sono non nulli. 
-
-Quindi, si possono memorizzare unicamente gli elementi non nulli in $\tilde{\mathbf{w}}$ 
-utilizzando un ulteriore array $\mathbf{b}$ di $m$ bit tale che 
-$$
-\mathbf{b}[i] = \begin{cases}
-    1 & \mathbf{w}[i] \neq 0 \\
-    0 & \mathbf{w}[i] = 0
-\end{cases}
-$$
-definendo quindi il vettore 
-$$
-\mathbf{w}[i] = \begin{cases}
-    0 & \mathbf{b}[i] = 0 \\
-    \tilde{\mathbf{w}}[\mathbf{rank_b}[i]] & \mathbf{b}[i] = 1
-\end{cases}
-$$
-In questo modo, la struttura (che è comunque compatta) in totale occupa 
-$$
-D_n = nr + m = nr + 1.23n = (r + 1.23) n \text{ bit}
-$$
-e si ha quindi 
-$$
-(r + 1.23 ) n < 1.23rn \implies (r + 1.23) < 1.23r  \implies r > 5
-$$
-
-\noindent
-Inizialmente, la tecnica MWHC era stata pensata per un uso ben più specifico, 
-ossia memorizzare una funziona di hash minimale perfetta, ossia una funzione
-che mappa $n$ chiavi in $n$ bucket privi di collisioni. 
-Tuttavia questa tecnica è abbastanza generale da memorizzare qualsiasi funzione e 
-si può utilizzare questa tecnica come intesa inizialmente semplicemente associando 
-$f(x)$ diversi da $0$ a $n-1$ per ogni elemento di $X$. 
+Lo spazio occupato per questa struttura compressa è di $nr+\gamma n+o(n)=O(nr)$ bit, con un numero di bit per chiave di $r+\gamma$, contro i $r\gamma$ della versione non compressa.
